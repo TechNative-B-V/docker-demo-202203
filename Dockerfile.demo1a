@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+
+#
+# Build the final image
+FROM php:8.1-cli
+WORKDIR /app
+
+#
+# Copy the composer files
+COPY composer.json composer.json
+COPY composer.lock composer.lock
+
+#
+# Copy the application files
+COPY app_default.php app.php
+COPY src src
+
+#
+# Install and run composer
+RUN apt-get update \
+    && apt-get install -y \
+         git \
+       --no-install-recommends \
+    # Cleanup APT
+    && apt-get clean \
+    && rm -rf /var/cache/* /var/log/apt/* /var/lib/apt/lists/*
+
+RUN curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer install
+
+#
+# Run the following command by default
+CMD ["php", "/app/app.php"]
